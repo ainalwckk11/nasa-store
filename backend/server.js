@@ -75,6 +75,7 @@ app.get("/admin", (req, res) => {
 
         <select id="produk">
           <optgroup label="Free Fire">
+            <option value="ff5">5 Diamond</option>
             <option value="ff12">12 Diamond</option>
             <option value="ff70">70 Diamond</option>
           </optgroup>
@@ -86,7 +87,7 @@ app.get("/admin", (req, res) => {
         </select>
 
         <button id="btnOrder" onclick="order()">Kirim Order</button>  
-        
+
         <p id="hasil"></p>
       </div>
 
