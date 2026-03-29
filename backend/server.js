@@ -249,6 +249,11 @@ app.get("/log", (req, res) => {
   }
 });
 
+app.get("/ip", async (req, res) => {
+  const response = await axios.get("https://api.ipify.org?format=json");
+  res.json(response.data);
+});
+
 // ================= RUN SERVER =================
 const PORT = process.env.PORT || 3000;
 
