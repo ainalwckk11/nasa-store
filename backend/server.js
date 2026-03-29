@@ -85,8 +85,8 @@ app.get("/admin", (req, res) => {
           </optgroup>        
         </select>
 
-        <button onclick="order()">Kirim Order</button>
-
+        <button id="btnOrder" onclick="order()">Kirim Order</button>  
+        
         <p id="hasil"></p>
       </div>
 
@@ -94,11 +94,16 @@ app.get("/admin", (req, res) => {
       function order() {
         const userId = document.getElementById("userId").value;
         const sku = document.getElementById("produk").value;
+        const btn = document.getElementById("btnOrder");
 
         if (!userId || !sku) {
           alert("Isi semua data!");
           return;
         }
+
+        // 🔒 disable tombol
+        btn.disabled = true;
+        btn.innerText = "Memproses...";
 
         document.getElementById("hasil").innerText = "⏳ Memproses...";
 
@@ -116,6 +121,18 @@ app.get("/admin", (req, res) => {
         .then(data => {
           document.getElementById("hasil").innerText =
             JSON.stringify(data, null, 2);
+
+          // 🔥 reset form
+          document.getElementById("userId").value = "";
+          document.getElementById("produk").value = "";
+
+          // 🔓 aktifkan lagi tombol
+          btn.disabled = false;
+          btn.innerText = "Kirim Order";
+        })
+        .catch(() => {
+          btn.disabled = false;
+          btn.innerText = "Kirim Order";
         });
       }
       </script>
