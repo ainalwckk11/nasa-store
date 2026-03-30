@@ -287,12 +287,12 @@ app.get("/products/:brand", async (req, res) => {
 
     const products = raw.filter(p =>
       p.brand &&
-      p.brand.toLowerCase().replace(/\s/g, '') === cleanBrand &&
+      p.brand.toLowerCase().includes(brand.toLowerCase()) &&
       p.category === "Games" &&
       p.buyer_product_status &&
       p.seller_product_status
     );
-
+    
     res.json(products);
 
   } catch (error) {
