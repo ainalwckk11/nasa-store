@@ -48,6 +48,21 @@ app.get("/admin", (req, res) => {
           border: none;
           cursor: pointer;
         }
+        .card-produk {
+          background: white;
+          padding: 10px;
+          border-radius: 10px;
+          cursor: pointer;
+          border: 2px solid transparent;
+          transition: 0.2s;
+        }
+        .card-produk:hover {
+          border: 2px solid #28a745;
+        }
+        .card-produk.active {
+          border: 2px solid #28a745;
+          background: #eaffea;
+        }
       </style>
     </head>
     <body>
@@ -73,15 +88,7 @@ app.get("/admin", (req, res) => {
 
         <input type="text" id="userId" placeholder="User ID / No HP">
 
-        <select id="game" onchange="loadProduk()">
-          <option value="">-- Pilih Game --</option>
-          <option value="free fire">Free Fire</option>
-          <option value="mobile legends">Mobile Legends</option>
-        </select>
-
-        <select id="produk">
-          <option value="">-- Pilih Produk --</option>
-        </select>
+        <div id="produkList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;"></div>
 
         <button id="btnOrder" onclick="order()">Kirim Order</button>  
 
@@ -89,27 +96,44 @@ app.get("/admin", (req, res) => {
       </div>
 
       <script>
-      async function loadProduk() {
-        const game = document.getElementById("game").value;
+let selectedSku = "";
 
-        if (!game) return;
+async function loadProduk() {
+  const game = document.getElementById("game").value;
 
-        document.getElementById("produk").innerHTML = "Loading...";
+  if (!game) return;
 
-        const res = await fetch("/products/" + game);
-        const data = await res.json();
+  const container = document.getElementById("produkList");
+  container.innerHTML = "Loading...";
 
-        const select = document.getElementById("produk");
-        select.innerHTML = "";
+  const res = await fetch("/products/" + game);
+  const data = await res.json();
 
-        data.forEach(p => {
-          const option = document.createElement("option");
-          option.value = p.buyer_sku_code;
-          option.textContent = p.product_name + " - Rp" + p.price;
-          select.appendChild(option);
+  container.innerHTML = "";
+
+  data.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "card-produk";
+
+      card.innerHTML =
+        "<b>" + p.product_name + "</b><br>" +
+        "<small>Rp" + p.price + "</small>";
+        
+          card.onclick = () => {
+            selectedSku = p.buyer_sku_code;
+
+            // reset semua card
+            document.querySelectorAll(".card-produk").forEach(c => {
+              c.classList.remove("active");
+            });
+
+            card.classList.add("active");
+          };
+
+          container.appendChild(card);
         });
       }
-
+        
       function order() {
         const userId = document.getElementById("userId").value;
         const sku = document.getElementById("produk").value;
