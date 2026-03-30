@@ -118,9 +118,12 @@ app.get("/admin", (req, res) => {
             const res = await fetch("/products/" + game);
             const result = await res.json();
 
-            const data = result.data;
+            console.log("FULL RESULT:", result);
+            
+            const data = result.data || result;
 
-            if (!data || !Array.isArray(data)) {
+            if (!Array.isArray(data)) {
+              console.log("DATA BUKAN ARRAY:", data);
               container.innerHTML = "Produk tidak tersedia";
               return;
             }
