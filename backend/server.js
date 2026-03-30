@@ -118,7 +118,7 @@ app.get("/admin", (req, res) => {
       </div>
 
       <div class="card">
-        <h3>⚡ Order Cepat</h3>
+        <h3>⚡ Order Cepat</h3> <button onclick="reloadData()">🔄 Reload Produk</button>
 
         <input type="text" id="userId" placeholder="User ID / No HP">
 
@@ -188,6 +188,16 @@ app.get("/admin", (req, res) => {
             container.innerHTML = "Gagal load produk";
             console.log("ERROR:", err);
           }
+        }
+
+        async function reloadData() {
+          const hasil = document.getElementById("hasil");
+          hasil.innerText = "⏳ Reload data...";
+
+          const res = await fetch("/reload");
+          const data = await res.json();
+
+          hasil.innerText = data.message;
         }
 
         function order() {
@@ -368,6 +378,11 @@ app.post("/order", async (req, res) => {
       error: error.response?.data || error.message
     });
   }
+});
+
+app.get("/reload", async (req, res) => {
+  await loadPricelist();
+  res.json({ status: "success", message: "Pricelist berhasil di-refresh" });
 });
 
 // ================= LIHAT LOG =================
