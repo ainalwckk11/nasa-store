@@ -109,7 +109,7 @@ app.get("/admin", (req, res) => {
 
           if (!game) return;
 
-          selectedSku = ""; // reset pilihan
+          selectedSku = "";
 
           const container = document.getElementById("produkList");
           container.innerHTML = "Loading...";
@@ -147,27 +147,25 @@ app.get("/admin", (req, res) => {
 
               container.appendChild(card);
             });
-            catch (err) {
+
+          } catch (err) {
             container.innerHTML = "Gagal load produk";
             console.log("ERROR:", err);
           }
-        }    
+        }
 
         function order() {
           const userId = document.getElementById("userId").value;
           const sku = selectedSku;
           const btn = document.getElementById("btnOrder");
 
-          if (!userId || !selectedSku) {
+          if (!userId || !sku) {
             alert("Isi user ID dan pilih produk!");
             return;
           }
 
-          // 🔒 disable tombol
           btn.disabled = true;
           btn.innerText = "Memproses...";
-
-          document.getElementById("hasil").innerText = "⏳ Memproses...";
 
           fetch("/order", {
             method: "POST",
@@ -184,11 +182,10 @@ app.get("/admin", (req, res) => {
             document.getElementById("hasil").innerText =
               JSON.stringify(data, null, 2);
 
-            // 🔥 reset form
+            selectedSku = "";
+            document.getElementById("produkList").innerHTML = "";
             document.getElementById("userId").value = "";
-            document.getElementById("produk").value = "";
 
-            // 🔓 aktifkan lagi tombol
             btn.disabled = false;
             btn.innerText = "Kirim Order";
           })
