@@ -102,44 +102,53 @@ app.get("/admin", (req, res) => {
       </div>
 
       <script>
-let selectedSku = "";
+      let selectedSku = "";
 
-async function loadProduk() {
-  const game = document.getElementById("game").value;
+      async function loadProduk() {
+        const game = document.getElementById("game").value;
 
-  if (!game) return;
+        if (!game) return;
 
-  const container = document.getElementById("produkList");
-  container.innerHTML = "Loading...";
+        selectedSku = ""; // reset pilihan
 
-  const res = await fetch("/products/" + game);
-  const data = await res.json();
+        const container = document.getElementById("produkList");
+        container.innerHTML = "Loading...";
 
-  container.innerHTML = "";
+        try {
+          const res = await fetch("/products/" + game);
+          const data = await res.json();
 
-  data.forEach(p => {
-    const card = document.createElement("div");
-    card.className = "card-produk";
+          console.log("DATA:", data);
 
-      card.innerHTML =
-        "<b>" + p.product_name + "</b><br>" +
-        "<small>Rp" + p.price + "</small>";
-        
-          card.onclick = () => {
-            selectedSku = p.buyer_sku_code;
+          container.innerHTML = "";
 
-            // reset semua card
-            document.querySelectorAll(".card-produk").forEach(c => {
-              c.classList.remove("active");
-            });
+          data.forEach(p => {
+            const card = document.createElement("div");
+            card.className = "card-produk";
 
-            card.classList.add("active");
-          };
+            card.innerHTML =
+              "<b>" + p.product_name + "</b><br>" +
+              "<small>Rp" + p.price + "</small>";
 
-          container.appendChild(card);
-        });
-      }
-        
+            card.onclick = () => {
+              selectedSku = p.buyer_sku_code;
+
+              document.querySelectorAll(".card-produk").forEach(c => {
+                c.classList.remove("active");
+              });
+
+              card.classList.add("active");
+            };
+
+            container.appendChild(card);
+          });
+
+        } catch (err) {
+          container.innerHTML = "Gagal load produk";
+          console.log("ERROR:", err);
+        }
+      }    
+
       function order() {
         const userId = document.getElementById("userId").value;
         const sku = selectedSku;
