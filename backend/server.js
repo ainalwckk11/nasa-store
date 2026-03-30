@@ -88,6 +88,12 @@ app.get("/admin", (req, res) => {
 
         <input type="text" id="userId" placeholder="User ID / No HP">
 
+        <select id="game" onchange="loadProduk()">
+          <option value="">-- Pilih Game --</option>
+          <option value="free fire">Free Fire</option>
+          <option value="mobile legends">Mobile Legends</option>
+        </select>
+
         <div id="produkList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;"></div>
 
         <button id="btnOrder" onclick="order()">Kirim Order</button>  
@@ -136,11 +142,11 @@ async function loadProduk() {
         
       function order() {
         const userId = document.getElementById("userId").value;
-        const sku = document.getElementById("produk").value;
+        const sku = selectedSku;
         const btn = document.getElementById("btnOrder");
 
-        if (!userId || !sku) {
-          alert("Isi semua data!");
+        if (!userId || !selectedSku) {
+          alert("Isi user ID dan pilih produk!");
           return;
         }
 
