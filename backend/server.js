@@ -13,6 +13,37 @@ let lastFetch = 0;
 const username = process.env.DIGI_USERNAME;
 const apiKey = process.env.DIGI_APIKEY;
 
+// 🔥 FUNCTION AMBIL DATA SEKALI
+async function loadPricelist() {
+  try {
+    console.log("Ambil data dari Digiflazz...");
+
+    const signature = crypto
+      .createHash("md5")
+      .update(username + apiKey + "pricelist")
+      .digest("hex");
+
+    const response = await axios.post(
+      "https://api.digiflazz.com/v1/price-list",
+      {
+        cmd: "prepaid",
+        username,
+        sign: signature
+      }
+    );
+
+    if (Array.isArray(response.data.data)) {
+      cachedProducts = response.data.data;
+      console.log("✅ Pricelist berhasil disimpan:", cachedProducts.length);
+    } else {
+      console.log("❌ Gagal ambil pricelist:", response.data);
+    }
+
+  } catch (err) {
+    console.log("ERROR INIT:", err.response?.data);
+  }
+}
+
 // ================= MIDDLEWARE =================
 app.use(cors());
 app.use(express.json());
@@ -262,54 +293,23 @@ app.get("/price-list", async (req, res) => {
   }
 });
 
-app.get("/products/:brand", async (req, res) => {
-  try {
-    const brand = req.params.brand;
+app.get("/products/:brand", (req, res) => {
+  const brand = req.params.brand;
 
-    // 🔥 kalau belum ada cache / sudah 1 menit → fetch ulang
-    if (Date.now() - lastFetch > 60000 || cachedProducts.length === 0) {
-      console.log("FETCH KE DIGIFLAZZ...");
-
-      const signature = crypto
-        .createHash("md5")
-        .update(username + apiKey + "pricelist")
-        .digest("hex");
-
-      const response = await axios.post(
-        "https://api.digiflazz.com/v1/price-list",
-        {
-          cmd: "prepaid",
-          username,
-          sign: signature
-        }
-      );
-
-      const raw = response.data.data;
-
-      if (!Array.isArray(raw)) {
-        console.log("KENA LIMIT / ERROR:", response.data);
-        return res.json([]);
-      }
-
-      cachedProducts = raw;
-      lastFetch = Date.now();
-    }
-
-    // 🔥 pakai cache
-    const products = cachedProducts.filter(p =>
-      p.brand &&
-      p.brand.toLowerCase().includes(brand.toLowerCase()) &&
-      p.category === "Games" &&
-      p.buyer_product_status &&
-      p.seller_product_status
-    );
-
-    res.json(products);
-
-  } catch (error) {
-    console.log("ERROR BACKEND:", error.response?.data);
-    res.json([]);
+  // kalau cache kosong
+  if (!Array.isArray(cachedProducts) || cachedProducts.length === 0) {
+    return res.json([]);
   }
+
+  const products = cachedProducts.filter(p =>
+    p.brand &&
+    p.brand.toLowerCase().includes(brand.toLowerCase()) &&
+    p.category === "Games" &&
+    p.buyer_product_status &&
+    p.seller_product_status
+  );
+
+  res.json(products);
 });
 
 // ================= ORDER REAL =================
@@ -390,4 +390,7 @@ const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log("Server jalan di port " + PORT);
+
+  // 🔥 WAJIB: load sekali saat start
+  loadPricelist();
 });
