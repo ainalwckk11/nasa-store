@@ -102,101 +102,101 @@ app.get("/admin", (req, res) => {
       </div>
 
       <script>
-      let selectedSku = "";
+        let selectedSku = "";
 
-      async function loadProduk() {
-        const game = document.getElementById("game").value;
+        async function loadProduk() {
+          const game = document.getElementById("game").value;
 
-        if (!game) return;
+          if (!game) return;
 
-        selectedSku = ""; // reset pilihan
+          selectedSku = ""; // reset pilihan
 
-        const container = document.getElementById("produkList");
-        container.innerHTML = "Loading...";
+          const container = document.getElementById("produkList");
+          container.innerHTML = "Loading...";
 
-        try {
-          const res = await fetch("/products/" + game);
-          const result = await res.json();
+          try {
+            const res = await fetch("/products/" + game);
+            const result = await res.json();
 
-          const data = result.data;
+            const data = result.data;
 
-          if (!data || !Array.isArray(data)) {
-            container.innerHTML = "Produk tidak tersedia";
+            if (!data || !Array.isArray(data)) {
+              container.innerHTML = "Produk tidak tersedia";
+              return;
+            }
+
+            container.innerHTML = "";
+
+            data.forEach(p => {
+              const card = document.createElement("div");
+              card.className = "card-produk";
+
+              card.innerHTML =
+                "<b>" + p.product_name + "</b><br>" +
+                "<small>Rp" + p.price + "</small>";
+
+              card.onclick = () => {
+                selectedSku = p.buyer_sku_code;
+
+                document.querySelectorAll(".card-produk").forEach(c => {
+                  c.classList.remove("active");
+                });
+
+                card.classList.add("active");
+              };
+
+              container.appendChild(card);
+            });
+            catch (err) {
+            container.innerHTML = "Gagal load produk";
+            console.log("ERROR:", err);
+          }
+        }    
+
+        function order() {
+          const userId = document.getElementById("userId").value;
+          const sku = selectedSku;
+          const btn = document.getElementById("btnOrder");
+
+          if (!userId || !selectedSku) {
+            alert("Isi user ID dan pilih produk!");
             return;
           }
 
-          container.innerHTML = "";
+          // 🔒 disable tombol
+          btn.disabled = true;
+          btn.innerText = "Memproses...";
 
-          data.forEach(p => {
-            const card = document.createElement("div");
-            card.className = "card-produk";
+          document.getElementById("hasil").innerText = "⏳ Memproses...";
 
-            card.innerHTML =
-              "<b>" + p.product_name + "</b><br>" +
-              "<small>Rp" + p.price + "</small>";
-
-            card.onclick = () => {
-              selectedSku = p.buyer_sku_code;
-
-              document.querySelectorAll(".card-produk").forEach(c => {
-                c.classList.remove("active");
-              });
-
-              card.classList.add("active");
-            };
-
-            container.appendChild(card);
-          });
-          catch (err) {
-          container.innerHTML = "Gagal load produk";
-          console.log("ERROR:", err);
-        }
-      }    
-
-      function order() {
-        const userId = document.getElementById("userId").value;
-        const sku = selectedSku;
-        const btn = document.getElementById("btnOrder");
-
-        if (!userId || !selectedSku) {
-          alert("Isi user ID dan pilih produk!");
-          return;
-        }
-
-        // 🔒 disable tombol
-        btn.disabled = true;
-        btn.innerText = "Memproses...";
-
-        document.getElementById("hasil").innerText = "⏳ Memproses...";
-
-        fetch("/order", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            userId: userId,
-            sku: sku
+          fetch("/order", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              userId: userId,
+              sku: sku
+            })
           })
-        })
-        .then(res => res.json())
-        .then(data => {
-          document.getElementById("hasil").innerText =
-            JSON.stringify(data, null, 2);
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById("hasil").innerText =
+              JSON.stringify(data, null, 2);
 
-          // 🔥 reset form
-          document.getElementById("userId").value = "";
-          document.getElementById("produk").value = "";
+            // 🔥 reset form
+            document.getElementById("userId").value = "";
+            document.getElementById("produk").value = "";
 
-          // 🔓 aktifkan lagi tombol
-          btn.disabled = false;
-          btn.innerText = "Kirim Order";
-        })
-        .catch(() => {
-          btn.disabled = false;
-          btn.innerText = "Kirim Order";
-        });
-      }
+            // 🔓 aktifkan lagi tombol
+            btn.disabled = false;
+            btn.innerText = "Kirim Order";
+          })
+          .catch(() => {
+            btn.disabled = false;
+            btn.innerText = "Kirim Order";
+          });
+        }
       </script>
 
     </body>
