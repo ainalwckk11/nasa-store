@@ -278,17 +278,31 @@ app.get("/products/:brand", async (req, res) => {
       }
     );
 
-    const products = response.data.data.filter(p =>
+    const raw = response.data.data;
+
+    // 🔥 VALIDASI WAJIB (INI YANG FIX BUG KAMU)
+    if (!Array.isArray(raw)) {
+      console.log("DIGI ERROR:", response.data);
+      return res.json([]); // kirim array kosong biar frontend aman
+    }
+
+    let products = raw.filter(p =>
+      p.brand &&
       p.brand.toLowerCase().includes(brand.toLowerCase()) &&
       p.category === "Games" &&
-      p.buyer_product_status &&
-      p.seller_product_status
+      p.buyer_product_status === true &&
+      p.seller_product_status === true
     );
+
+    // 🔥 OPTIONAL: urutkan dari termurah
+    products.sort((a, b) => a.price - b.price);
 
     res.json(products);
 
   } catch (error) {
-    res.json({ error: error.response?.data || error.message });
+    console.log("ERROR BACKEND:", error.response?.data);
+
+    res.json([]); // jangan kirim object error ke frontend
   }
 });
 
