@@ -115,9 +115,8 @@ app.get("/admin", (req, res) => {
           container.innerHTML = "Loading...";
 
           try {
-            const res = await fetch("/products/" + game);
+            const res = await fetch("/products/" + encodeURIComponent(game));                             
             const result = await res.json();
-
             console.log("FULL RESULT:", result);
             
             const data = result.data || result;
@@ -280,29 +279,24 @@ app.get("/products/:brand", async (req, res) => {
 
     const raw = response.data.data;
 
-    // 🔥 VALIDASI WAJIB (INI YANG FIX BUG KAMU)
     if (!Array.isArray(raw)) {
-      console.log("DIGI ERROR:", response.data);
-      return res.json([]); // kirim array kosong biar frontend aman
+      return res.json([]);
     }
 
-    let products = raw.filter(p =>
-      p.brand &&
-      p.brand.toLowerCase().includes(brand.toLowerCase()) &&
-      p.category === "Games" &&
-      p.buyer_product_status === true &&
-      p.seller_product_status === true
-    );
+    const cleanBrand = brand.toLowerCase().replace(/\s/g, '');
 
-    // 🔥 OPTIONAL: urutkan dari termurah
-    products.sort((a, b) => a.price - b.price);
+    const products = raw.filter(p =>
+      p.brand &&
+      p.brand.toLowerCase().replace(/\s/g, '') === cleanBrand &&
+      p.category === "Games" &&
+      p.buyer_product_status &&
+      p.seller_product_status
+    );
 
     res.json(products);
 
   } catch (error) {
-    console.log("ERROR BACKEND:", error.response?.data);
-
-    res.json([]); // jangan kirim object error ke frontend
+    res.json([]);
   }
 });
 
