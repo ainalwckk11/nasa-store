@@ -6,6 +6,9 @@ const fs = require("fs");
 
 const app = express();
 
+let cachedProducts = [];
+let lastFetch = 0;
+
 // ================= CONFIG =================
 const username = process.env.DIGI_USERNAME;
 const apiKey = process.env.DIGI_APIKEY;
@@ -263,39 +266,48 @@ app.get("/products/:brand", async (req, res) => {
   try {
     const brand = req.params.brand;
 
-    const signature = crypto
-      .createHash("md5")
-      .update(username + apiKey + "pricelist")
-      .digest("hex");
+    // 🔥 kalau belum ada cache / sudah 1 menit → fetch ulang
+    if (Date.now() - lastFetch > 60000 || cachedProducts.length === 0) {
+      console.log("FETCH KE DIGIFLAZZ...");
 
-    const response = await axios.post(
-      "https://api.digiflazz.com/v1/price-list",
-      {
-        cmd: "prepaid",
-        username,
-        sign: signature
+      const signature = crypto
+        .createHash("md5")
+        .update(username + apiKey + "pricelist")
+        .digest("hex");
+
+      const response = await axios.post(
+        "https://api.digiflazz.com/v1/price-list",
+        {
+          cmd: "prepaid",
+          username,
+          sign: signature
+        }
+      );
+
+      const raw = response.data.data;
+
+      if (!Array.isArray(raw)) {
+        console.log("KENA LIMIT / ERROR:", response.data);
+        return res.json([]);
       }
-    );
 
-    const raw = response.data.data;
-
-    if (!Array.isArray(raw)) {
-      return res.json([]);
+      cachedProducts = raw;
+      lastFetch = Date.now();
     }
 
-    const cleanBrand = brand.toLowerCase().replace(/\s/g, '');
-
-    const products = raw.filter(p =>
+    // 🔥 pakai cache
+    const products = cachedProducts.filter(p =>
       p.brand &&
       p.brand.toLowerCase().includes(brand.toLowerCase()) &&
       p.category === "Games" &&
       p.buyer_product_status &&
       p.seller_product_status
     );
-    
+
     res.json(products);
 
   } catch (error) {
+    console.log("ERROR BACKEND:", error.response?.data);
     res.json([]);
   }
 });
