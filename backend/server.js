@@ -73,17 +73,14 @@ app.get("/admin", (req, res) => {
 
         <input type="text" id="userId" placeholder="User ID / No HP">
 
-        <select id="produk">
-          <optgroup label="Free Fire">
-            <option value="ff5">5 Diamond</option>
-            <option value="ff12">12 Diamond</option>
-            <option value="ff70">70 Diamond</option>
-          </optgroup>
+        <select id="game" onchange="loadProduk()">
+          <option value="">-- Pilih Game --</option>
+          <option value="free fire">Free Fire</option>
+          <option value="mobile legends">Mobile Legends</option>
+        </select>
 
-          <optgroup label="Mobile Legends">
-            <option value="ml5">5 Diamond</option>
-            <option value="ml12">12 Diamond</option>
-          </optgroup>        
+        <select id="produk">
+          <option value="">-- Pilih Produk --</option>
         </select>
 
         <button id="btnOrder" onclick="order()">Kirim Order</button>  
@@ -92,6 +89,27 @@ app.get("/admin", (req, res) => {
       </div>
 
       <script>
+      async function loadProduk() {
+        const game = document.getElementById("game").value;
+
+        if (!game) return;
+
+        document.getElementById("produk").innerHTML = "Loading...";
+
+        const res = await fetch("/products/" + game);
+        const data = await res.json();
+
+        const select = document.getElementById("produk");
+        select.innerHTML = "";
+
+        data.forEach(p => {
+          const option = document.createElement("option");
+          option.value = p.buyer_sku_code;
+          option.textContent = p.product_name + " - Rp" + p.price;
+          select.appendChild(option);
+        });
+      }
+
       function order() {
         const userId = document.getElementById("userId").value;
         const sku = document.getElementById("produk").value;
@@ -196,6 +214,38 @@ app.get("/price-list", async (req, res) => {
     res.json({
       error: error.response?.data || error.message
     });
+  }
+});
+
+app.get("/products/:brand", async (req, res) => {
+  try {
+    const brand = req.params.brand;
+
+    const signature = crypto
+      .createHash("md5")
+      .update(username + apiKey + "pricelist")
+      .digest("hex");
+
+    const response = await axios.post(
+      "https://api.digiflazz.com/v1/price-list",
+      {
+        cmd: "prepaid",
+        username,
+        sign: signature
+      }
+    );
+
+    const products = response.data.data.filter(p =>
+      p.brand.toLowerCase().includes(brand.toLowerCase()) &&
+      p.category === "Games" &&
+      p.buyer_product_status &&
+      p.seller_product_status
+    );
+
+    res.json(products);
+
+  } catch (error) {
+    res.json({ error: error.response?.data || error.message });
   }
 });
 
