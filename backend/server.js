@@ -116,9 +116,14 @@ app.get("/admin", (req, res) => {
 
         try {
           const res = await fetch("/products/" + game);
-          const data = await res.json();
+          const result = await res.json();
 
-          console.log("DATA:", data);
+          const data = result.data;
+
+          if (!data || !Array.isArray(data)) {
+            container.innerHTML = "Produk tidak tersedia";
+            return;
+          }
 
           container.innerHTML = "";
 
@@ -142,8 +147,7 @@ app.get("/admin", (req, res) => {
 
             container.appendChild(card);
           });
-
-        } catch (err) {
+          catch (err) {
           container.innerHTML = "Gagal load produk";
           console.log("ERROR:", err);
         }
